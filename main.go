@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,5 +19,5 @@ func main() {
 }
 
 func getHealthcheck(c *gin.Context) {
-	c.JSON(200, "All good!")
+	c.JSON(http.StatusOK, "All good!")
 }
