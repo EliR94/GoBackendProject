@@ -9,15 +9,20 @@ import (
 
 func main() {
 	port := "3000"
-	r := gin.Default()
-
-	r.GET("/healthcheck", getHealthcheck)
 
 	fmt.Println("Starting API on port " + port)
-	err := r.Run(":" + port)
+	err := getRouter().Run(":" + port)
 	fmt.Println(err)
 }
 
 func getHealthcheck(c *gin.Context) {
 	c.JSON(http.StatusOK, "All good!")
+}
+
+func getRouter() *gin.Engine {
+	r := gin.Default()
+
+	r.GET("/healthcheck", getHealthcheck)
+
+	return r
 }
