@@ -19,3 +19,15 @@ func TestHealthCheck(t *testing.T) {
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
 	assert.Equal(t, "\"All good!\"", responseRecorder.Body.String())
 }
+
+func TestGetGreetings(t *testing.T) {
+	router := getRouter()
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("GET", "/greetings", nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, "???", responce.Body.String())
+}
