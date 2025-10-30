@@ -11,8 +11,7 @@ func main() {
 	port := "3000"
 
 	fmt.Println("Starting API on port " + port)
-	err := getRouter().Run(":" + port)
-	fmt.Println(err)
+	getRouter().Run(":" + port)
 }
 
 func getHealthcheck(c *gin.Context) {
