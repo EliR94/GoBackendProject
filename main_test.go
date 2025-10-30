@@ -21,7 +21,8 @@ func TestHealthCheck(t *testing.T) {
 }
 
 func TestGetGreetings(t *testing.T) {
-	router := getRouter()
+	// var listOfTestGreetings map[string]Greeting
+	router := getRouter() // <--- cannot populate with dummy data
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", "/greetings", nil)
 	if err != nil {
