@@ -22,7 +22,7 @@ func main() {
 	port := "3000"
 
 	fmt.Println("Starting API on port " + port)
-	err := getRouter().Run(":" + port)
+	err := getRouter(greetingsMap).Run(":" + port)
 	fmt.Println(err)
 }
 
@@ -52,8 +52,8 @@ type Greeting struct {
 	Message string `json:"message"`
 }
 
-func getRouter() *gin.Engine {
-	// i have a list of greetings, what do?
+func getRouter(initialGreetings map[string]string) *gin.Engine {
+	greetingsMap = initialGreetings
 
 	r := gin.Default()
 
