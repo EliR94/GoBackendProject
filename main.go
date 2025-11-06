@@ -43,7 +43,7 @@ func getGreetings(c *gin.Context) {
 	}
 
 	mapOfIdtoMessage["items"] = itemsSlice
-
+	fmt.Println(mapOfIdtoMessage)
 	c.JSON(http.StatusOK, mapOfIdtoMessage)
 }
 
