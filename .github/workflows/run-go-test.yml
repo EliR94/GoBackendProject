@@ -9,13 +9,14 @@ on:
 jobs:
   run-unit-tests:
     runs-on: ubuntu-latest
+    needs: golang-security-check
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.25'
 
@@ -24,3 +25,32 @@ jobs:
 
       - name: Run tests
         run: go test -v ./...
+
+  golangci-lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+
+  golang-security-check:
+    name: Go Security Check
+    runs-on: ubuntu-latest
+    needs: golangci-lint
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v5
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...
