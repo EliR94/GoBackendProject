@@ -171,7 +171,7 @@ type Body struct {
 
 func TestPostGreetings(t *testing.T) {
 	// ARRANGE
-	var fakeUUID string = "12345678-9012-3456-7890-123456789012"
+	var fakeUUID = "12345678-9012-3456-7890-123456789012"
 	testGreetings := make(map[string]string)
 	fakeUUIDService := FakeUUIDService{}
 	fakeUUIDService.StoreFakeUUID(fakeUUID)
