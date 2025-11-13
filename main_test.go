@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -157,4 +158,117 @@ func TestGetGreetingsNoGreetings(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, responce.Code)
 	assert.Equal(t, 0, len(responceMap.Items))
+}
+
+func TestPostGreetings(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	router := getRouter(testGreetings)
+
+	// assert the greeting is posted
+	// ACT
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("POST", "/greetings", strings.NewReader(`{"message": "Hello World"}`))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var postResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &postResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusCreated, responce.Code)
+	assert.Equal(t, "???", postResponse.Id) // TO DO: this will need to be finalised
+	assert.Equal(t, "Hello World", postResponse.Message)
+
+	// now assert the greeting persists in the system
+	// ACT
+	getResponce := httptest.NewRecorder()
+	getRequest, err := http.NewRequest("GET", "/greetings", nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(getResponce, getRequest)
+
+	// ASSERT
+	var responceMap ResponceMap
+
+	err = json.Unmarshal(getResponce.Body.Bytes(), &responceMap)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	correctGreetingId := false
+	correctGreetingMessage := false
+
+	for _, items := range responceMap.Items {
+		if items.Id == postResponse.Id {
+			correctGreetingId = true
+			if items.Message == postResponse.Message {
+				correctGreetingMessage = true
+			}
+		}
+	}
+
+	assert.Equal(t, http.StatusOK, getResponce.Code)
+	assert.Equal(t, true, correctGreetingId)
+	assert.Equal(t, true, correctGreetingMessage)
+	assert.Equal(t, 1, len(responceMap.Items))
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+func TestPostGreetingsBadRequest(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	router := getRouter(testGreetings)
+
+	// assert the greeting is posted
+	// ACT
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("POST", "/greetings", strings.NewReader(`{"thisPayload": "hasTheWrongData"}`))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var errorResponse ErrorResponse
+	err = json.Unmarshal(responce.Body.Bytes(), &errorResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusBadRequest, responce.Code)
+	assert.Equal(t, `"Key: 'Message' Error:Field validation for 'Message' failed on the 'required' tag"`, errorResponse.Error)
+}
+
+func TestPostGreetingsEmptyGreeting(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	router := getRouter(testGreetings)
+
+	// ACT
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("POST", "/greetings", strings.NewReader(`{"message": ""}`))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var errorResponse ErrorResponse
+	err = json.Unmarshal(responce.Body.Bytes(), &errorResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusBadRequest, responce.Code)
+	assert.Equal(t, `"Key: 'Message' Error:Field validation for 'Message' failed on the 'required' tag"`, errorResponse.Error)
 }
