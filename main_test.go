@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -16,7 +17,8 @@ func TestHealthCheck(t *testing.T) {
 	testGreetings["abc"] = "123"
 
 	// ACT
-	router := getRouter(testGreetings)
+	fakeUUIDService := FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
 	responseRecorder := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", "/healthcheck", nil)
 	if err != nil {
@@ -41,7 +43,8 @@ func TestGetGreetings(t *testing.T) {
 	testGreetings["ghi"] = "789"
 
 	// ACT
-	router := getRouter(testGreetings)
+	fakeUUIDService := FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", "/greetings", nil)
 	if err != nil {
@@ -99,7 +102,8 @@ func TestGetGreetingsEmptyGreeting(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
 	testGreetings["emptyGreeting"] = ""
-	router := getRouter(testGreetings)
+	fakeUUIDService := FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -138,7 +142,8 @@ func TestGetGreetingsEmptyGreeting(t *testing.T) {
 func TestGetGreetingsNoGreetings(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
-	router := getRouter(testGreetings)
+	fakeUUIDService := FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -160,15 +165,28 @@ func TestGetGreetingsNoGreetings(t *testing.T) {
 	assert.Equal(t, 0, len(responceMap.Items))
 }
 
+type Body struct {
+	Message string `json:"message"`
+}
+
 func TestPostGreetings(t *testing.T) {
 	// ARRANGE
+	var fakeUUID string = "12345678-9012-3456-7890-123456789012"
 	testGreetings := make(map[string]string)
-	router := getRouter(testGreetings)
+	fakeUUIDService := FakeUUIDService{}
+	fakeUUIDService.StoreFakeUUID(fakeUUID)
+	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// assert the greeting is posted
 	// ACT
 	responce := httptest.NewRecorder()
-	request, err := http.NewRequest("POST", "/greetings", strings.NewReader(`{"message": "Hello World"}`))
+	var postBody Body
+	postBody.Message = "Hello World"
+	jsonBody, err := json.Marshal(postBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -182,8 +200,8 @@ func TestPostGreetings(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusCreated, responce.Code)
-	assert.Equal(t, "???", postResponse.Id) // TO DO: this will need to be finalised
-	assert.Equal(t, "Hello World", postResponse.Message)
+	assert.Equal(t, fakeUUID, postResponse.Id)
+	assert.Equal(t, postBody.Message, postResponse.Message)
 
 	// now assert the greeting persists in the system
 	// ACT
@@ -224,15 +242,29 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+type FakeUUIDService struct {
+	FakeUUID string
+}
+
+func (r *FakeUUIDService) NewUUID() string {
+	return r.FakeUUID
+}
+
+func (r *FakeUUIDService) StoreFakeUUID(newFakeUUID string) {
+	r.FakeUUID = newFakeUUID
+}
+
 func TestPostGreetingsBadRequest(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
-	router := getRouter(testGreetings)
+
+	fakeUUIDService := FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// assert the greeting is posted
 	// ACT
 	responce := httptest.NewRecorder()
-	request, err := http.NewRequest("POST", "/greetings", strings.NewReader(`{"thisPayload": "hasTheWrongData"}`))
+	request, err := http.NewRequest("POST", "/greeting", strings.NewReader(`{"thisPayload": "hasTheWrongData"}`))
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -246,17 +278,24 @@ func TestPostGreetingsBadRequest(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, responce.Code)
-	assert.Equal(t, `"Key: 'Message' Error:Field validation for 'Message' failed on the 'required' tag"`, errorResponse.Error)
+	assert.Equal(t, `Key: 'PostRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
 }
 
 func TestPostGreetingsEmptyGreeting(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
-	router := getRouter(testGreetings)
+	fakeUUIDService := FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// ACT
 	responce := httptest.NewRecorder()
-	request, err := http.NewRequest("POST", "/greetings", strings.NewReader(`{"message": ""}`))
+	var postBody Body
+	postBody.Message = ""
+	jsonBody, err := json.Marshal(postBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -270,5 +309,5 @@ func TestPostGreetingsEmptyGreeting(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, responce.Code)
-	assert.Equal(t, `"Key: 'Message' Error:Field validation for 'Message' failed on the 'required' tag"`, errorResponse.Error)
+	assert.Equal(t, `Key: 'PostRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
 }
