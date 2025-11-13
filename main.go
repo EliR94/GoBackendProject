@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func main() {
@@ -22,7 +23,9 @@ func main() {
 	port := "3000"
 
 	fmt.Println("Starting API on port " + port)
-	err := getRouter(greetingsMap).Run(":" + port)
+
+	uuidService := RealUUIDService{}
+	err := getRouter(greetingsMap, &uuidService).Run(":" + port)
 	fmt.Println(err)
 }
 
@@ -43,7 +46,6 @@ func getGreetings(c *gin.Context) {
 	}
 
 	mapOfIdtoMessage["items"] = itemsSlice
-
 	c.JSON(http.StatusOK, mapOfIdtoMessage)
 }
 
@@ -52,13 +54,42 @@ type Greeting struct {
 	Message string `json:"message"`
 }
 
-func getRouter(initialGreetings map[string]string) *gin.Engine {
+type PostRequest struct {
+	Message string `json:"message" binding:"required"`
+}
+
+type UUIDService interface {
+	NewUUID() string
+}
+
+type RealUUIDService struct {
+}
+
+func (r *RealUUIDService) NewUUID() string {
+	return uuid.NewString()
+}
+
+func getRouter(initialGreetings map[string]string, uuidService UUIDService) *gin.Engine {
 	greetingsMap = initialGreetings
 
 	r := gin.Default()
 
 	r.GET("/healthcheck", getHealthcheck)
 	r.GET("/greetings", getGreetings)
+	r.POST("/greeting", func(c *gin.Context) {
+		var requestBody PostRequest
+		if err := c.ShouldBindJSON(&requestBody); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		id := uuidService.NewUUID()
+		greetingsMap[id] = requestBody.Message
+		c.JSON(http.StatusCreated, gin.H{
+			"id":      id,
+			"message": requestBody.Message,
+		})
+	})
 
 	return r
 }
