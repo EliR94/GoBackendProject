@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -288,4 +289,75 @@ func TestPostGreetingsEmptyGreeting(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, responce.Code)
 	assert.Equal(t, `Key: 'PostRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
+}
+
+func TestGetGreeting(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	expectedId := "12345678-9012-3456-7890-123456789012"
+	expectedMessage := "Hello World"
+	testGreetings[expectedId] = expectedMessage
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", expectedId), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var getResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, expectedId, getResponse.Id)
+	assert.Equal(t, expectedMessage, getResponse.Message)
+}
+
+func TestGetGreetingNotFound(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	incorrectId := "87654321-8765-4321-8765-432187654321"
+	testGreetings["12345678-9012-3456-7890-123456789012"] = "Hello World"
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", incorrectId), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusNotFound, responce.Code)
+	assert.Nil(t, responce.Body.String())
+}
+
+func TestGetGreetingNotFoundNotUUID(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	incorrectId := "somethingThatDoesntExist"
+	testGreetings["12345678-9012-3456-7890-123456789012"] = "Hello World"
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", incorrectId), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusNotFound, responce.Code)
+	assert.Nil(t, responce.Body.String())
 }
