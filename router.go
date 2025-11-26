@@ -13,6 +13,7 @@ func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService)
 
 	r.GET("/healthcheck", getHealthcheck)
 	r.GET("/greetings", getGreetings)
+	r.GET("/greeting/:uuid", getGreeting)
 	r.POST("/greeting", func(c *gin.Context) {
 		postGreeting(c, uuidService)
 	})

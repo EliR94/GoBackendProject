@@ -28,8 +28,20 @@ func getGreetings(c *gin.Context) {
 	c.JSON(http.StatusOK, mapOfIdtoMessage)
 }
 
-func postGreeting(c *gin.Context, uuidService uuid.UUIDService) {
+func getGreeting(c *gin.Context) {
+	uuid := c.Param("uuid")
+	message, exists := greetingsMap[uuid]
+	if exists {
+		c.JSON(http.StatusOK, gin.H{
+			"id":      uuid,
+			"message": message,
+		})
+	} else {
+		c.Status(http.StatusNotFound)
+	}
+}
 
+func postGreeting(c *gin.Context, uuidService uuid.UUIDService) {
 	var requestBody PostRequest
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
