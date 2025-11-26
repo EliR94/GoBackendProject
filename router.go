@@ -1,0 +1,21 @@
+package main
+
+import (
+	"project/services/uuid"
+
+	"github.com/gin-gonic/gin"
+)
+
+func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService) *gin.Engine {
+	greetingsMap = initialGreetings
+
+	r := gin.Default()
+
+	r.GET("/healthcheck", getHealthcheck)
+	r.GET("/greetings", getGreetings)
+	r.POST("/greeting", func(c *gin.Context) {
+		postGreeting(c, uuidService)
+	})
+
+	return r
+}

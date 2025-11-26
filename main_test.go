@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"project/services/uuid"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +19,7 @@ func TestHealthCheck(t *testing.T) {
 	testGreetings["abc"] = "123"
 
 	// ACT
-	fakeUUIDService := FakeUUIDService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
 	router := getRouter(testGreetings, &fakeUUIDService)
 	responseRecorder := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", "/healthcheck", nil)
@@ -31,10 +33,6 @@ func TestHealthCheck(t *testing.T) {
 	assert.Equal(t, "\"All good!\"", responseRecorder.Body.String())
 }
 
-type ResponceMap struct {
-	Items []Greeting `json:"items"`
-}
-
 func TestGetGreetings(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
@@ -43,7 +41,7 @@ func TestGetGreetings(t *testing.T) {
 	testGreetings["ghi"] = "789"
 
 	// ACT
-	fakeUUIDService := FakeUUIDService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
 	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", "/greetings", nil)
@@ -102,7 +100,7 @@ func TestGetGreetingsEmptyGreeting(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
 	testGreetings["emptyGreeting"] = ""
-	fakeUUIDService := FakeUUIDService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
 	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// ACT
@@ -142,7 +140,7 @@ func TestGetGreetingsEmptyGreeting(t *testing.T) {
 func TestGetGreetingsNoGreetings(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
-	fakeUUIDService := FakeUUIDService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
 	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// ACT
@@ -165,22 +163,18 @@ func TestGetGreetingsNoGreetings(t *testing.T) {
 	assert.Equal(t, 0, len(responceMap.Items))
 }
 
-type Body struct {
-	Message string `json:"message"`
-}
-
 func TestPostGreetings(t *testing.T) {
 	// ARRANGE
 	var fakeUUID = "12345678-9012-3456-7890-123456789012"
 	testGreetings := make(map[string]string)
-	fakeUUIDService := FakeUUIDService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
 	fakeUUIDService.StoreFakeUUID(fakeUUID)
 	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// assert the greeting is posted
 	// ACT
 	responce := httptest.NewRecorder()
-	var postBody Body
+	var postBody PostRequest
 	postBody.Message = "Hello World"
 	jsonBody, err := json.Marshal(postBody)
 	if err != nil {
@@ -238,27 +232,11 @@ func TestPostGreetings(t *testing.T) {
 	assert.Equal(t, 1, len(responceMap.Items))
 }
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
-type FakeUUIDService struct {
-	FakeUUID string
-}
-
-func (r *FakeUUIDService) NewUUID() string {
-	return r.FakeUUID
-}
-
-func (r *FakeUUIDService) StoreFakeUUID(newFakeUUID string) {
-	r.FakeUUID = newFakeUUID
-}
-
 func TestPostGreetingsBadRequest(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
 
-	fakeUUIDService := FakeUUIDService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
 	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// assert the greeting is posted
@@ -284,12 +262,12 @@ func TestPostGreetingsBadRequest(t *testing.T) {
 func TestPostGreetingsEmptyGreeting(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
-	fakeUUIDService := FakeUUIDService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
 	router := getRouter(testGreetings, &fakeUUIDService)
 
 	// ACT
 	responce := httptest.NewRecorder()
-	var postBody Body
+	var postBody PostRequest
 	postBody.Message = ""
 	jsonBody, err := json.Marshal(postBody)
 	if err != nil {
