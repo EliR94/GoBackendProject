@@ -338,7 +338,7 @@ func TestGetGreetingNotFound(t *testing.T) {
 
 	// ASSERT
 	assert.Equal(t, http.StatusNotFound, responce.Code)
-	assert.Nil(t, responce.Body.String())
+	assert.Empty(t, responce.Body.String())
 }
 
 func TestGetGreetingNotFoundNotUUID(t *testing.T) {
@@ -359,5 +359,5 @@ func TestGetGreetingNotFoundNotUUID(t *testing.T) {
 
 	// ASSERT
 	assert.Equal(t, http.StatusNotFound, responce.Code)
-	assert.Nil(t, responce.Body.String())
+	assert.Empty(t, responce.Body.String())
 }
