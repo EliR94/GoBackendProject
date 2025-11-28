@@ -361,3 +361,188 @@ func TestGetGreetingNotFoundNotUUID(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, responce.Code)
 	assert.Empty(t, responce.Body.String())
 }
+
+func TestPutGreeting(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "12345678-9012-3456-7890-123456789012"
+	originalMessage := "Original Message"
+	testGreetings[id] = originalMessage
+	var putBody PutRequest
+	putBody.Message = "New Message Here"
+	jsonBody, err := json.Marshal(putBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+
+	// ACT
+	// make an original get requst before the put request
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	getRequestBefore, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, getRequestBefore)
+
+	// ASSERT
+	// ensure the original message was added during the ARRANGE steps
+	var getResponseBefore Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseBefore)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponseBefore.Id)
+	assert.Equal(t, originalMessage, getResponseBefore.Message)
+
+	// ACT
+	// make the PUT request to modify the message stored for the specific ID
+	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	// ensure the PUT request response code is 200 and the response body Id and Message are correct
+	var putResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &putResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, putResponse.Id)
+	assert.Equal(t, putBody.Message, putResponse.Message)
+
+	// ACT
+	// make a new get requst after the put request
+	getRequestAfter, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, getRequestAfter)
+
+	// ASSERT
+	// ensure the message has actually been modified in testGreetings not only the response body being correct
+	var getResponseAfter Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseAfter)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponseAfter.Id)
+	assert.Equal(t, putBody.Message, getResponseAfter.Message)
+}
+
+func TestPutGreetingNotFound(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "12345678-9012-3456-7890-123456789012"
+	var putBody PutRequest
+	putBody.Message = "New Message Here"
+	jsonBody, err := json.Marshal(putBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusNotFound, responce.Code)
+	assert.Empty(t, responce.Body)
+}
+
+func TestPutGreetingNotFoundNotUUID(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "somethingThatDoesntExist"
+	var putBody PutRequest
+	putBody.Message = "New Message Here"
+	jsonBody, err := json.Marshal(putBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusNotFound, responce.Code)
+	assert.Empty(t, responce.Body)
+}
+
+func TestPutGreetingMalformedRequest(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "12345678-9012-3456-7890-123456789012"
+	testGreetings[id] = "Original Message"
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), strings.NewReader(`{"someRubbish": "dataHere"}`))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var errorResponse ErrorResponse
+	err = json.Unmarshal(responce.Body.Bytes(), &errorResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusBadRequest, responce.Code)
+	assert.Equal(t, `Key: 'PutRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
+}
+
+func TestPutGreetingMalformedRequestAndNotFound(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	testGreetings["12345678-9012-3456-7890-123456789012"] = "Original Message"
+	incorrectId := "87654321-8765-4321-8765-432187654321"
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", incorrectId), strings.NewReader(`{"someRubbish": "dataHere"}`))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var errorResponse ErrorResponse
+	err = json.Unmarshal(responce.Body.Bytes(), &errorResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusBadRequest, responce.Code)
+	assert.Equal(t, `Key: 'PutRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
+}

@@ -17,6 +17,7 @@ func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService)
 	r.POST("/greeting", func(c *gin.Context) {
 		postGreeting(c, uuidService)
 	})
+	r.PUT("/greeting/:uuid", putGreeting)
 
 	return r
 }

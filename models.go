@@ -11,6 +11,11 @@ type PostRequest struct {
 	Message string `json:"message" binding:"required"`
 }
 
+// This struct represents the body for an incoming PUT request
+type PutRequest struct {
+	Message string `json:"message" binding:"required"`
+}
+
 // This struct represents the GET request response on endpoint /greetings
 type ResponceMap struct {
 	Items []Greeting `json:"items"`
