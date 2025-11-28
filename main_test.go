@@ -368,9 +368,9 @@ func TestPutGreeting(t *testing.T) {
 	id := "12345678-9012-3456-7890-123456789012"
 	originalMessage := "Original Message"
 	testGreetings[id] = originalMessage
-	var postBody PostRequest
-	postBody.Message = "New Message Here"
-	jsonBody, err := json.Marshal(postBody)
+	var putBody PutRequest
+	putBody.Message = "New Message Here"
+	jsonBody, err := json.Marshal(putBody)
 	if err != nil {
 		t.Error("Failed to marshal")
 	}
@@ -404,6 +404,7 @@ func TestPutGreeting(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create request")
 	}
+	responce = httptest.NewRecorder()
 	router.ServeHTTP(responce, request)
 
 	// ASSERT
@@ -416,7 +417,7 @@ func TestPutGreeting(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, responce.Code)
 	assert.Equal(t, id, putResponse.Id)
-	assert.Equal(t, postBody.Message, putResponse.Message)
+	assert.Equal(t, putBody.Message, putResponse.Message)
 
 	// ACT
 	// make a new get requst after the put request
@@ -424,6 +425,7 @@ func TestPutGreeting(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create request")
 	}
+	responce = httptest.NewRecorder()
 	router.ServeHTTP(responce, getRequestAfter)
 
 	// ASSERT
@@ -436,16 +438,16 @@ func TestPutGreeting(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, responce.Code)
 	assert.Equal(t, id, getResponseAfter.Id)
-	assert.Equal(t, postBody.Message, getResponseAfter.Message)
+	assert.Equal(t, putBody.Message, getResponseAfter.Message)
 }
 
 func TestPutGreetingNotFound(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
 	id := "12345678-9012-3456-7890-123456789012"
-	var postBody PostRequest
-	postBody.Message = "New Message Here"
-	jsonBody, err := json.Marshal(postBody)
+	var putBody PutRequest
+	putBody.Message = "New Message Here"
+	jsonBody, err := json.Marshal(putBody)
 	if err != nil {
 		t.Error("Failed to marshal")
 	}
@@ -469,9 +471,9 @@ func TestPutGreetingNotFoundNotUUID(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
 	id := "somethingThatDoesntExist"
-	var postBody PostRequest
-	postBody.Message = "New Message Here"
-	jsonBody, err := json.Marshal(postBody)
+	var putBody PutRequest
+	putBody.Message = "New Message Here"
+	jsonBody, err := json.Marshal(putBody)
 	if err != nil {
 		t.Error("Failed to marshal")
 	}
@@ -515,7 +517,7 @@ func TestPutGreetingMalformedRequest(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, responce.Code)
-	assert.Equal(t, `Key: 'Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
+	assert.Equal(t, `Key: 'PutRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
 }
 
 func TestPutGreetingMalformedRequestAndNotFound(t *testing.T) {
@@ -542,5 +544,5 @@ func TestPutGreetingMalformedRequestAndNotFound(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, responce.Code)
-	assert.Equal(t, `Key: 'Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
+	assert.Equal(t, `Key: 'PutRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
 }

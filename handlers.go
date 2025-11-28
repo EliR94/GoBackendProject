@@ -55,3 +55,22 @@ func postGreeting(c *gin.Context, uuidService uuid.UUIDService) {
 		"message": requestBody.Message,
 	})
 }
+
+func putGreeting(c *gin.Context) {
+	var requestBody PutRequest
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	uuid := c.Param("uuid")
+	_, exists := greetingsMap[uuid]
+	if exists {
+		greetingsMap[uuid] = requestBody.Message
+		c.JSON(http.StatusOK, gin.H{
+			"id":      uuid,
+			"message": requestBody.Message,
+		})
+	} else {
+		c.Status(http.StatusNotFound)
+	}
+}
