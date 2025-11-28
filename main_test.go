@@ -366,7 +366,8 @@ func TestPutGreeting(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
 	id := "12345678-9012-3456-7890-123456789012"
-	testGreetings[id] = "Original Message"
+	originalMessage := "Original Message"
+	testGreetings[id] = originalMessage
 	var postBody PostRequest
 	postBody.Message = "New Message Here"
 	jsonBody, err := json.Marshal(postBody)
@@ -375,9 +376,30 @@ func TestPutGreeting(t *testing.T) {
 	}
 
 	// ACT
+	// make an original get requst before the put request
 	fakeUUIDService := uuid.FakeUUIDService{}
 	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
+	getRequestBefore, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, getRequestBefore)
+
+	// ASSERT
+	// ensure the original message was added during the ARRANGE steps
+	var getResponseBefore Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseBefore)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponseBefore.Id)
+	assert.Equal(t, originalMessage, getResponseBefore.Message)
+
+	// ACT
+	// make the PUT request to modify the message stored for the specific ID
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
 	if err != nil {
 		t.Error("Failed to create request")
@@ -385,6 +407,7 @@ func TestPutGreeting(t *testing.T) {
 	router.ServeHTTP(responce, request)
 
 	// ASSERT
+	// ensure the PUT request response code is 200 and the response body Id and Message are correct
 	var putResponse Greeting
 	err = json.Unmarshal(responce.Body.Bytes(), &putResponse)
 	if err != nil {
@@ -394,6 +417,26 @@ func TestPutGreeting(t *testing.T) {
 	assert.Equal(t, http.StatusOK, responce.Code)
 	assert.Equal(t, id, putResponse.Id)
 	assert.Equal(t, postBody.Message, putResponse.Message)
+
+	// ACT
+	// make a new get requst after the put request
+	getRequestAfter, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, getRequestAfter)
+
+	// ASSERT
+	// ensure the message has actually been modified in testGreetings not only the response body being correct
+	var getResponseAfter Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseAfter)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponseAfter.Id)
+	assert.Equal(t, postBody.Message, getResponseAfter.Message)
 }
 
 func TestPutGreetingNotFound(t *testing.T) {
