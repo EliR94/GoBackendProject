@@ -74,3 +74,14 @@ func putGreeting(c *gin.Context) {
 		c.Status(http.StatusNotFound)
 	}
 }
+
+func deleteGreeting(c *gin.Context) {
+	uuid := c.Param("uuid")
+	_, exists := greetingsMap[uuid]
+	if exists {
+		delete(greetingsMap, uuid)
+		c.Status(http.StatusNoContent)
+	} else {
+		c.Status(http.StatusNotFound)
+	}
+}

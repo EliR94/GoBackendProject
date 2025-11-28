@@ -18,6 +18,7 @@ func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService)
 		postGreeting(c, uuidService)
 	})
 	r.PUT("/greeting/:uuid", putGreeting)
+	r.DELETE("/greeting/:uuid", deleteGreeting)
 
 	return r
 }

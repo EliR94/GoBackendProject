@@ -546,3 +546,103 @@ func TestPutGreetingMalformedRequestAndNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, responce.Code)
 	assert.Equal(t, `Key: 'PutRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag`, errorResponse.Error)
 }
+
+func TestDeleteGreeting(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "12345678-9012-3456-7890-123456789012"
+	message := "Hello World!"
+	testGreetings[id] = message
+
+	// ACT
+	// make an original get requst before the delete request
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	getRequestBefore, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, getRequestBefore)
+
+	// ASSERT
+	// ensure the original message was added during the ARRANGE steps
+	var getResponseBefore Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseBefore)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponseBefore.Id)
+	assert.Equal(t, message, getResponseBefore.Message)
+
+	// ACT
+	// make the DELETE request to remove the greeting for the specific ID
+	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	// ensure the DELETE request response code is 204 and the responce body is empty
+	assert.Equal(t, http.StatusNoContent, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// make a new get requst after the DELETE request
+	getRequestAfter, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, getRequestAfter)
+
+	// ASSERT
+	// ensure the greeting has actually been deleted from testGreetings
+	assert.Equal(t, http.StatusNotFound, responce.Code)
+	assert.Empty(t, responce.Body.String())
+}
+
+func TestDeleteGreetingNotFound(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	testGreetings["12345678-9012-3456-7890-123456789012"] = "Original Message"
+	incorrectId := "87654321-8765-4321-8765-432187654321"
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", incorrectId), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusNotFound, responce.Code)
+	assert.Empty(t, responce.Body.String())
+}
+func TestDeleteGreetingNotUUID(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	testGreetings["12345678-9012-3456-7890-123456789012"] = "Original Message"
+	id := "somethingThatDoesntExist"
+
+	// ACT
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService)
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusNotFound, responce.Code)
+	assert.Empty(t, responce.Body.String())
+}
