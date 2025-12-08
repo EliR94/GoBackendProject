@@ -9,12 +9,6 @@ import (
 
 func main() {
 	greetingsMap = make(map[string]string)
-	greetingsMap["123"] = "Hello World"
-	greetingsMap["456"] = "Yo!"
-	greetingsMap["789"] = "Sup"
-	greetingsMap["987"] = "Bonjour"
-	greetingsMap["654"] = "Hi"
-	greetingsMap["321"] = "Morning"
 
 	port := "3000"
 

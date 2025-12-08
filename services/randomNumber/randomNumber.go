@@ -1,7 +1,8 @@
 package randomnumber
 
 import (
-	"math/rand/v2"
+	"crypto/rand"
+	"math/big"
 )
 
 // the interface which oulines anything that has a NewRandomNumber func is a RandomNumberService
@@ -15,5 +16,6 @@ type RealRandomNumberService struct {
 
 // this function provides the randomNumber service with a NewRandomNumber method and enables the stucture on line ? to become a RandomNumberService
 func (r *RealRandomNumberService) NewRandomNumber(maxNumber int) int {
-	return rand.IntN(maxNumber)
+	randomNumber, _ := rand.Int(rand.Reader, big.NewInt(int64(maxNumber)))
+	return int(randomNumber.Int64())
 }
