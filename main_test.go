@@ -681,11 +681,11 @@ func TestGetRandomGreeting(t *testing.T) {
 	// ACT
 	// make a get/random requst while fakeRandomNumberService is set to 2
 	responce := httptest.NewRecorder()
-	requestOne, err := http.NewRequest("GET", "/greeting/random", nil)
+	request, err := http.NewRequest("GET", "/greeting/random", nil)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
-	router.ServeHTTP(responce, requestOne)
+	router.ServeHTTP(responce, request)
 
 	// ASSERT
 	// ensure the correct greeting is returned while fakeRandomNumberService is set to 2 (greetings are ordered by id)
@@ -705,12 +705,8 @@ func TestGetRandomGreeting(t *testing.T) {
 
 	// ACT
 	// make a get/random requst while fakeRandomNumberService is set to 1
-	requestTwo, err := http.NewRequest("GET", "/greeting/random", nil)
-	if err != nil {
-		t.Error("Failed to create request")
-	}
 	responce = httptest.NewRecorder()
-	router.ServeHTTP(responce, requestTwo)
+	router.ServeHTTP(responce, request)
 
 	// ASSERT
 	// ensure the correct greeting is returned while fakeRandomNumberService is set to 1 (greetings are ordered by id)
