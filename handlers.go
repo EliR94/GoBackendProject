@@ -1,8 +1,11 @@
 package main
 
 import (
+	"maps"
 	"net/http"
+	"slices"
 
+	randomnumber "project/services/randomNumber"
 	"project/services/uuid"
 
 	"github.com/gin-gonic/gin"
@@ -38,6 +41,27 @@ func getGreeting(c *gin.Context) {
 		})
 	} else {
 		c.Status(http.StatusNotFound)
+	}
+}
+
+func getRandomGreeting(c *gin.Context, randomNumber randomnumber.RandomNumberService) {
+	greetingsMapLength := len(greetingsMap)
+	if greetingsMapLength > 0 {
+		randomNumber := randomNumber.NewRandomNumber(greetingsMapLength)
+
+		var greetingIdsSlice []string
+		for greetingId := range maps.Keys(greetingsMap) {
+			greetingIdsSlice = append(greetingIdsSlice, greetingId)
+		}
+		slices.Sort(greetingIdsSlice)
+		randomGreetingId := greetingIdsSlice[randomNumber]
+		randomGreetingMessage := greetingsMap[randomGreetingId]
+		c.JSON(http.StatusOK, gin.H{
+			"id":      randomGreetingId,
+			"message": randomGreetingMessage,
+		})
+	} else {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "no greetings in system"})
 	}
 }
 

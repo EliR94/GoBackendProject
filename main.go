@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	randomnumber "project/services/randomNumber"
 	"project/services/uuid"
 )
 
@@ -14,8 +15,9 @@ func main() {
 	fmt.Println("Starting API on port " + port)
 
 	uuidService := uuid.RealUUIDService{}
+	randomNumberService := randomnumber.RealRandomNumberService{}
 
-	err := getRouter(greetingsMap, &uuidService).Run(":" + port)
+	err := getRouter(greetingsMap, &uuidService, &randomNumberService).Run(":" + port)
 	fmt.Println(err)
 }
 

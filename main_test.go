@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	randomnumber "project/services/randomNumber"
 	"project/services/uuid"
 
 	"github.com/stretchr/testify/assert"
@@ -18,10 +19,11 @@ func TestHealthCheck(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
 	testGreetings["abc"] = "123"
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responseRecorder := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", "/healthcheck", nil)
 	if err != nil {
@@ -40,10 +42,11 @@ func TestGetGreetings(t *testing.T) {
 	testGreetings["abc"] = "123"
 	testGreetings["def"] = "456"
 	testGreetings["ghi"] = "789"
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", "/greetings", nil)
 	if err != nil {
@@ -101,8 +104,9 @@ func TestGetGreetingsEmptyGreeting(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
 	testGreetings["emptyGreeting"] = ""
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -141,8 +145,9 @@ func TestGetGreetingsEmptyGreeting(t *testing.T) {
 func TestGetGreetingsNoGreetings(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -168,9 +173,10 @@ func TestPostGreetings(t *testing.T) {
 	// ARRANGE
 	var fakeUUID = "12345678-9012-3456-7890-123456789012"
 	testGreetings := make(map[string]string)
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
 	fakeUUIDService.StoreFakeUUID(fakeUUID)
-	router := getRouter(testGreetings, &fakeUUIDService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// assert the greeting is posted
 	// ACT
@@ -236,9 +242,9 @@ func TestPostGreetings(t *testing.T) {
 func TestPostGreetingsBadRequest(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
-
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// assert the greeting is posted
 	// ACT
@@ -263,8 +269,9 @@ func TestPostGreetingsBadRequest(t *testing.T) {
 func TestPostGreetingsEmptyGreeting(t *testing.T) {
 	// ARRANGE
 	testGreetings := make(map[string]string)
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -297,10 +304,11 @@ func TestGetGreeting(t *testing.T) {
 	expectedId := "12345678-9012-3456-7890-123456789012"
 	expectedMessage := "Hello World"
 	testGreetings[expectedId] = expectedMessage
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", expectedId), nil)
 	if err != nil {
@@ -325,10 +333,11 @@ func TestGetGreetingNotFound(t *testing.T) {
 	testGreetings := make(map[string]string)
 	incorrectId := "87654321-8765-4321-8765-432187654321"
 	testGreetings["12345678-9012-3456-7890-123456789012"] = "Hello World"
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", incorrectId), nil)
 	if err != nil {
@@ -346,10 +355,11 @@ func TestGetGreetingNotFoundNotUUID(t *testing.T) {
 	testGreetings := make(map[string]string)
 	incorrectId := "somethingThatDoesntExist"
 	testGreetings["12345678-9012-3456-7890-123456789012"] = "Hello World"
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", incorrectId), nil)
 	if err != nil {
@@ -374,11 +384,12 @@ func TestPutGreeting(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to marshal")
 	}
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
 	// make an original get requst before the put request
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	getRequestBefore, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
 	if err != nil {
@@ -451,10 +462,11 @@ func TestPutGreetingNotFound(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to marshal")
 	}
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
 	if err != nil {
@@ -477,10 +489,11 @@ func TestPutGreetingNotFoundNotUUID(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to marshal")
 	}
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
 	if err != nil {
@@ -498,10 +511,11 @@ func TestPutGreetingMalformedRequest(t *testing.T) {
 	testGreetings := make(map[string]string)
 	id := "12345678-9012-3456-7890-123456789012"
 	testGreetings[id] = "Original Message"
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), strings.NewReader(`{"someRubbish": "dataHere"}`))
 	if err != nil {
@@ -525,10 +539,11 @@ func TestPutGreetingMalformedRequestAndNotFound(t *testing.T) {
 	testGreetings := make(map[string]string)
 	testGreetings["12345678-9012-3456-7890-123456789012"] = "Original Message"
 	incorrectId := "87654321-8765-4321-8765-432187654321"
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", incorrectId), strings.NewReader(`{"someRubbish": "dataHere"}`))
 	if err != nil {
@@ -553,11 +568,12 @@ func TestDeleteGreeting(t *testing.T) {
 	id := "12345678-9012-3456-7890-123456789012"
 	message := "Hello World!"
 	testGreetings[id] = message
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
 	// make an original get requst before the delete request
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	getRequestBefore, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
 	if err != nil {
@@ -611,10 +627,11 @@ func TestDeleteGreetingNotFound(t *testing.T) {
 	testGreetings := make(map[string]string)
 	testGreetings["12345678-9012-3456-7890-123456789012"] = "Original Message"
 	incorrectId := "87654321-8765-4321-8765-432187654321"
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", incorrectId), nil)
 	if err != nil {
@@ -631,10 +648,11 @@ func TestDeleteGreetingNotUUID(t *testing.T) {
 	testGreetings := make(map[string]string)
 	testGreetings["12345678-9012-3456-7890-123456789012"] = "Original Message"
 	id := "somethingThatDoesntExist"
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
 	// ACT
-	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService)
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
 	if err != nil {
@@ -645,4 +663,86 @@ func TestDeleteGreetingNotUUID(t *testing.T) {
 	// ASSERT
 	assert.Equal(t, http.StatusNotFound, responce.Code)
 	assert.Empty(t, responce.Body.String())
+}
+
+func TestGetRandomGreeting(t *testing.T) {
+	// ARRANGE
+	// set up testGreetings map with greetings
+	testGreetings := make(map[string]string)
+	testGreetings["12345678-9012-3456-7890-123456789012"] = "Hello World"
+	testGreetings["2345678-9012-3456-7890-1234567890123"] = "Hi"
+	testGreetings["345678-9012-3456-7890-12345678901234"] = "Hey"
+	// update fakeRandomNumberService to be 2
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeRandomNumberService.StoreFakeRandomNumber(2)
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+
+	// ACT
+	// make a get/random requst while fakeRandomNumberService is set to 2
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("GET", "/greeting/random", nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	// ensure the correct greeting is returned while fakeRandomNumberService is set to 2 (greetings are ordered by id)
+	var getResponseOne Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseOne)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, "345678-9012-3456-7890-12345678901234", getResponseOne.Id)
+	assert.Equal(t, "Hey", getResponseOne.Message)
+
+	// ARRANGE
+	// update fakeRandomNumberService to 1
+	fakeRandomNumberService.StoreFakeRandomNumber(1)
+
+	// ACT
+	// make a get/random requst while fakeRandomNumberService is set to 1
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	// ensure the correct greeting is returned while fakeRandomNumberService is set to 1 (greetings are ordered by id)
+	var getResponseTwo Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseTwo)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, "2345678-9012-3456-7890-1234567890123", getResponseTwo.Id)
+	assert.Equal(t, "Hi", getResponseTwo.Message)
+}
+
+func TestGetRandomGreetingNoGreetings(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+
+	// ACT
+	responce := httptest.NewRecorder()
+	request, err := http.NewRequest("GET", "/greeting/random", nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var getResponse ErrorResponse
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusServiceUnavailable, responce.Code)
+	assert.Equal(t, "no greetings in system", getResponse.Error)
 }
