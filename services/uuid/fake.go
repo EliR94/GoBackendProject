@@ -1,13 +1,13 @@
 package uuid
 
 type FakeUUIDService struct {
-	FakeUUID string
+	fakeUUID string
 }
 
 func (r *FakeUUIDService) NewUUID() string {
-	return r.FakeUUID
+	return r.fakeUUID
 }
 
 func (r *FakeUUIDService) StoreFakeUUID(newFakeUUID string) {
-	r.FakeUUID = newFakeUUID
+	r.fakeUUID = newFakeUUID
 }

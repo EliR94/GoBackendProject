@@ -1,13 +1,13 @@
 package randomnumber
 
 type FakeRandomNumberService struct {
-	FakeRandomNumber int
+	fakeRandomNumber int
 }
 
 func (r *FakeRandomNumberService) NewRandomNumber(maxNumber int) int {
-	return r.FakeRandomNumber
+	return r.fakeRandomNumber
 }
 
 func (r *FakeRandomNumberService) StoreFakeRandomNumber(newFakeRandomNumber int) {
-	r.FakeRandomNumber = newFakeRandomNumber
+	r.fakeRandomNumber = newFakeRandomNumber
 }
