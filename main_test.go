@@ -665,33 +665,65 @@ func TestDeleteGreetingNotUUID(t *testing.T) {
 	assert.Empty(t, responce.Body.String())
 }
 
-// func TestGetRandomGreeting(t *testing.T) {
-// 	// ARRANGE
-// 	testGreetings := make(map[string]string)
-// 	// set greetings in the testGreetings map
-// 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
-// 	// set the random number to something
-// 	fakeUUIDService := uuid.FakeUUIDService{}
-// 	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+func TestGetRandomGreeting(t *testing.T) {
+	// ARRANGE
+	// set up testGreetings map with greetings
+	testGreetings := make(map[string]string)
+	testGreetings["12345678-9012-3456-7890-123456789012"] = "Hello World"
+	testGreetings["2345678-9012-3456-7890-1234567890123"] = "Hi"
+	testGreetings["345678-9012-3456-7890-12345678901234"] = "Hey"
+	// update fakeRandomNumberService to be 2
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeRandomNumberService.StoreFakeRandomNumber(2)
+	fakeUUIDService := uuid.FakeUUIDService{}
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
 
-// 	// ACT
-// 	responce := httptest.NewRecorder()
-// 	request, err := http.NewRequest("GET", "/greeting/random", nil)
-// 	if err != nil {
-// 		t.Error("Failed to create request")
-// 	}
-// 	router.ServeHTTP(responce, request)
+	// ACT
+	// make a get/random requst while fakeRandomNumberService is set to 2
+	responce := httptest.NewRecorder()
+	requestOne, err := http.NewRequest("GET", "/greeting/random", nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, requestOne)
 
-// 	// ASSERT
-// 	var getResponse ErrorResponse
-// 	err = json.Unmarshal(responce.Body.Bytes(), &getResponse)
-// 	if err != nil {
-// 		t.Error("Failed to unmarshal")
-// 	}
+	// ASSERT
+	// ensure the correct greeting is returned while fakeRandomNumberService is set to 2 (greetings are ordered by id)
+	var getResponseOne Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseOne)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
 
-// 	assert.Equal(t, http.StatusOK, responce.Code)
-// 	assert.Equal(t, "no greetings in system", getResponse.Error)
-// }
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, "345678-9012-3456-7890-12345678901234", getResponseOne.Id)
+	assert.Equal(t, "Hey", getResponseOne.Message)
+
+	// ARRANGE
+	// update fakeRandomNumberService to 1
+	fakeRandomNumberService.StoreFakeRandomNumber(1)
+
+	// ACT
+	// make a get/random requst while fakeRandomNumberService is set to 1
+	requestTwo, err := http.NewRequest("GET", "/greeting/random", nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, requestTwo)
+
+	// ASSERT
+	// ensure the correct greeting is returned while fakeRandomNumberService is set to 1 (greetings are ordered by id)
+	var getResponseTwo Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponseTwo)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, "2345678-9012-3456-7890-1234567890123", getResponseTwo.Id)
+	assert.Equal(t, "Hi", getResponseTwo.Message)
+}
 
 func TestGetRandomGreetingNoGreetings(t *testing.T) {
 	// ARRANGE
