@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,5 +27,15 @@ func loggerMiddleware(uuidService uuid.UUIDService) gin.HandlerFunc {
 		duration := responseTime.Sub(requestTime)
 		afterLog := fmt.Sprintf("Corellation ID: %s / Response Code: %d / Response Time: %s / Duration of Request: %v\n", corellationId, responseCode, responseTime.Format(time.RFC3339), duration)
 		fmt.Println(afterLog)
+	}
+}
+
+func authorizationMiddleware(secretKey string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Header.Get("X-Auth") == secretKey {
+			c.Next()
+		} else {
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
 	}
 }
