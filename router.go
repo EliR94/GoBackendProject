@@ -10,7 +10,9 @@ import (
 func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService, randomNumberService randomnumber.RandomNumberService) *gin.Engine {
 	greetingsMap = initialGreetings
 
-	r := gin.Default()
+	r := gin.New()
+	r.Use(loggerMiddleware(uuidService))
+	r.Use(gin.Recovery())
 
 	r.GET("/healthcheck", getHealthcheck)
 	r.GET("/greetings", getGreetings)
