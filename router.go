@@ -21,7 +21,7 @@ func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService,
 	})
 	r.GET("/greeting/:uuid", getGreeting)
 	restrictedEndpoints := r.Group("/greeting")
-	restrictedEndpoints.Use(authorizationMiddleware(secretKey))
+	restrictedEndpoints.Use(authenticationMiddleware(secretKey))
 	{
 		restrictedEndpoints.POST("", func(c *gin.Context) {
 			postGreeting(c, uuidService)

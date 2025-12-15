@@ -30,9 +30,10 @@ func loggerMiddleware(uuidService uuid.UUIDService) gin.HandlerFunc {
 	}
 }
 
-func authorizationMiddleware(secretKey string) gin.HandlerFunc {
+func authenticationMiddleware(secretKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.Header.Get("X-Auth") == secretKey {
+		xAuth := c.Request.Header.Get("X-Auth")
+		if xAuth == secretKey && xAuth != "" {
 			c.Next()
 		} else {
 			c.AbortWithStatus(http.StatusUnauthorized)
