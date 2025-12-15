@@ -189,7 +189,7 @@ func TestPostGreetings(t *testing.T) {
 		t.Error("Failed to marshal")
 	}
 	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -253,7 +253,7 @@ func TestPostGreetingsBadRequest(t *testing.T) {
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("POST", "/greeting", strings.NewReader(`{"thisPayload": "hasTheWrongData"}`))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -287,7 +287,7 @@ func TestPostGreetingsEmptyGreeting(t *testing.T) {
 		t.Error("Failed to marshal")
 	}
 	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -419,7 +419,7 @@ func TestPutGreeting(t *testing.T) {
 	// ACT
 	// make the PUT request to modify the message stored for the specific ID
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -478,7 +478,7 @@ func TestPutGreetingNotFound(t *testing.T) {
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -507,7 +507,7 @@ func TestPutGreetingNotFoundNotUUID(t *testing.T) {
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -531,7 +531,7 @@ func TestPutGreetingMalformedRequest(t *testing.T) {
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), strings.NewReader(`{"someRubbish": "dataHere"}`))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -561,7 +561,7 @@ func TestPutGreetingMalformedRequestAndNotFound(t *testing.T) {
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", incorrectId), strings.NewReader(`{"someRubbish": "dataHere"}`))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -613,7 +613,7 @@ func TestDeleteGreeting(t *testing.T) {
 	// ACT
 	// make the DELETE request to remove the greeting for the specific ID
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -653,7 +653,7 @@ func TestDeleteGreetingNotFound(t *testing.T) {
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", incorrectId), nil)
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -676,7 +676,7 @@ func TestDeleteGreetingNotUUID(t *testing.T) {
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -789,7 +789,7 @@ func TestAuthenticationMiddlewarePostGreeting(t *testing.T) {
 		t.Error("Failed to marshal")
 	}
 	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -847,7 +847,7 @@ func TestAuthenticationMiddlewarePutGreeting(t *testing.T) {
 	// ACT
 	// assert the greeting message is modified when authourised
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -901,7 +901,7 @@ func TestAuthenticationMiddlewareDeleteGreeting(t *testing.T) {
 	// ACT
 	// assert the greeting is deleted when authourised
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
-	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
