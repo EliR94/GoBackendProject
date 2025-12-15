@@ -768,3 +768,168 @@ func TestGetRandomGreetingNoGreetings(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, responce.Code)
 	assert.Equal(t, "no greetings in system", getResponse.Error)
 }
+
+func TestAuthenticationMiddlewarePostGreeting(t *testing.T) {
+	// ARRANGE
+	var fakeUUID = "12345678-9012-3456-7890-123456789012"
+	testGreetings := make(map[string]string)
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	fakeUUIDService.StoreFakeUUID(fakeUUID)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
+
+	// ACT
+	// assert the greeting is posted when authourised
+	responce := httptest.NewRecorder()
+	var postBody PostRequest
+	postBody.Message = "Hello World"
+	jsonBody, err := json.Marshal(postBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
+	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var postResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &postResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusCreated, responce.Code)
+	assert.Equal(t, fakeUUID, postResponse.Id)
+	assert.Equal(t, postBody.Message, postResponse.Message)
+
+	// ACT
+	// assert the greeting is not posted and 401 status is returned when unauthourised (empty string)
+	responce = httptest.NewRecorder()
+	request.Header.Set("X-Auth", "")
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// assert the greeting is not posted and 401 status is returned when unauthourised (incorrect string)
+	responce = httptest.NewRecorder()
+	request.Header.Set("X-Auth", "incorrectSecretCode456")
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+}
+
+func TestAuthenticationMiddlewarePutGreeting(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "12345678-9012-3456-7890-123456789012"
+	originalMessage := "Original Message"
+	testGreetings[id] = originalMessage
+	var putBody PutRequest
+	putBody.Message = "New Message Here"
+	jsonBody, err := json.Marshal(putBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
+
+	// ACT
+	// assert the greeting message is modified when authourised
+	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
+	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	responce := httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	// ensure the PUT request response code is 200 and the response body Id and Message are correct
+	var putResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &putResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, putResponse.Id)
+	assert.Equal(t, putBody.Message, putResponse.Message)
+
+	// ACT
+	// assert the greeting message is not modified when unauthourised (empty string)
+	request.Header.Set("X-Auth", "")
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// assert the greeting message is not modified when unauthourised (incorrect string)
+	request.Header.Set("X-Auth", "incorrectSecretCode456")
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+}
+
+func TestAuthenticationMiddlewareDeleteGreeting(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "12345678-9012-3456-7890-123456789012"
+	message := "Hello World!"
+	testGreetings[id] = message
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
+
+	// ACT
+	// assert the greeting is deleted when authourised
+	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
+	request.Header.Add("X-Auth", "mySecretCodeABC123")
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	responce := httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	// ensure the DELETE request response code is 204 and the responce body is empty
+	assert.Equal(t, http.StatusNoContent, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// assert the greeting is not deleted when unauthourised (empty string)
+	request.Header.Set("X-Auth", "")
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// assert the greeting is not deleted when unauthourised (incorrect string)
+	request.Header.Set("X-Auth", "incorrectSecretCode456")
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+}
