@@ -809,28 +809,8 @@ func TestAuthenticationMiddlewarePostGreeting(t *testing.T) {
 	router.ServeHTTP(getResponce, getRequest)
 
 	// ASSERT
-	var responceMap ResponceMap
-
-	err = json.Unmarshal(getResponce.Body.Bytes(), &responceMap)
-	if err != nil {
-		t.Error("Failed to unmarshal")
-	}
-
-	correctGreetingId := false
-	correctGreetingMessage := false
-
-	for _, items := range responceMap.Items {
-		if items.Id == fakeUUID {
-			correctGreetingId = true
-			if items.Message == postBody.Message {
-				correctGreetingMessage = true
-			}
-		}
-	}
-
 	assert.Equal(t, http.StatusOK, getResponce.Code)
-	assert.Equal(t, false, correctGreetingId)
-	assert.Equal(t, false, correctGreetingMessage)
+	assert.Equal(t, 0, len(testGreetings))
 
 	// ACT
 	// assert 401 status is returned when unauthourised (incorrect string)
@@ -848,26 +828,8 @@ func TestAuthenticationMiddlewarePostGreeting(t *testing.T) {
 	router.ServeHTTP(getResponce, getRequest)
 
 	// ASSERT
-	err = json.Unmarshal(getResponce.Body.Bytes(), &responceMap)
-	if err != nil {
-		t.Error("Failed to unmarshal")
-	}
-
-	correctGreetingId = false
-	correctGreetingMessage = false
-
-	for _, items := range responceMap.Items {
-		if items.Id == fakeUUID {
-			correctGreetingId = true
-			if items.Message == postBody.Message {
-				correctGreetingMessage = true
-			}
-		}
-	}
-
 	assert.Equal(t, http.StatusOK, getResponce.Code)
-	assert.Equal(t, false, correctGreetingId)
-	assert.Equal(t, false, correctGreetingMessage)
+	assert.Equal(t, 0, len(testGreetings))
 
 	// ACT
 	// assert the greeting is posted when authourised
