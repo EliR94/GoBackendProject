@@ -33,13 +33,13 @@
 * GET /healthcheck
     * Request:
         * No request body or headers required
-    * Expected Responce:
+    * Expected Response:
         * Status Code: `200`
         * Body: `"All Good!"` - if the API is running without error
 * GET /greetings
     * Request:
         * No request body or headers required
-    * Expected Responce:
+    * Expected Response:
         * Status Code: `200`
         * Body: `{
   "items": [
@@ -54,7 +54,7 @@
     * Request:
         * No request body or headers required
         * `:uuid` is the Greeting ID
-    * Expected Responce:
+    * Expected Response:
         * Status Code: `200`
         * Body: `{
     "id": "12345678-9012-3456-7890-123456789012",
@@ -63,7 +63,7 @@
 * GET /greeting/random
     * Request:
         * No request body or headers required
-    * Expected Responce:
+    * Expected Response:
         * Status Code: `200`
         * Body: `{
     "id": "12345678-9012-3456-7890-123456789012",
@@ -72,7 +72,7 @@
 * POST /greeting
     * Request:
         * Requires request body `{ "Message" : "Hello World" }` and a authorised X-Auth header
-    * Expected Responce:
+    * Expected Response:
         * Status Code: `201`
         * Body: `{
   "id": "12345678-9012-3456-7890-123456789012",
@@ -82,7 +82,7 @@
     * Request:
         * Requires request body `{ "Message" : "New Message Here" }` and a authorised X-Auth header
         * `:uuid` is the Greeting ID
-    * Expected Responce:
+    * Expected Response:
         * Status Code: `200`
         * Body: `{
     "id": "12345678-9012-3456-7890-123456789012",
@@ -92,6 +92,6 @@
     * Request:
         * Requires a authorised X-Auth header
         * `:uuid` is the Greeting ID
-    * Expected Responce:
+    * Expected Response:
         * Status Code: `204`
         * No Response Body
