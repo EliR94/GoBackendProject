@@ -10,6 +10,16 @@ import (
 func main() {
 	greetingsMap = make(map[string]string)
 
+	// default greetings for demo
+	greetingsMap["12345678-9012-3456-7890-123456789012"] = "Hello World"
+	greetingsMap["12345678-9012-3456-7890-123456789013"] = "Hey"
+	greetingsMap["12345678-9012-3456-7890-123456789014"] = "Howdy"
+	greetingsMap["12345678-9012-3456-7890-123456789015"] = "Sup!"
+	greetingsMap["12345678-9012-3456-7890-123456789016"] = "Yo Yo Yo"
+	greetingsMap["12345678-9012-3456-7890-123456789017"] = "Wassup"
+	greetingsMap["12345678-9012-3456-7890-123456789018"] = "Bonjour"
+	greetingsMap["12345678-9012-3456-7890-123456789019"] = "Γειά σου"
+
 	port := "3000"
 
 	fmt.Println("Starting API on port " + port)
