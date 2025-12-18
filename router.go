@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService, randomNumberService randomnumber.RandomNumberService) *gin.Engine {
+func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService, randomNumberService randomnumber.RandomNumberService, secretKey string) *gin.Engine {
 	greetingsMap = initialGreetings
 
 	r := gin.New()
@@ -20,11 +20,15 @@ func getRouter(initialGreetings map[string]string, uuidService uuid.UUIDService,
 		getRandomGreeting(c, randomNumberService)
 	})
 	r.GET("/greeting/:uuid", getGreeting)
-	r.POST("/greeting", func(c *gin.Context) {
-		postGreeting(c, uuidService)
-	})
-	r.PUT("/greeting/:uuid", putGreeting)
-	r.DELETE("/greeting/:uuid", deleteGreeting)
+	restrictedEndpoints := r.Group("/greeting")
+	restrictedEndpoints.Use(authenticationMiddleware(secretKey))
+	{
+		restrictedEndpoints.POST("", func(c *gin.Context) {
+			postGreeting(c, uuidService)
+		})
+		restrictedEndpoints.PUT("/:uuid", putGreeting)
+		restrictedEndpoints.DELETE("/:uuid", deleteGreeting)
+	}
 
 	return r
 }

@@ -21,7 +21,7 @@ func TestHealthCheck(t *testing.T) {
 	testGreetings["abc"] = "123"
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	responseRecorder := httptest.NewRecorder()
@@ -44,7 +44,7 @@ func TestGetGreetings(t *testing.T) {
 	testGreetings["ghi"] = "789"
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -106,7 +106,7 @@ func TestGetGreetingsEmptyGreeting(t *testing.T) {
 	testGreetings["emptyGreeting"] = ""
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -147,7 +147,7 @@ func TestGetGreetingsNoGreetings(t *testing.T) {
 	testGreetings := make(map[string]string)
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -176,7 +176,8 @@ func TestPostGreetings(t *testing.T) {
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
 	fakeUUIDService.StoreFakeUUID(fakeUUID)
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// assert the greeting is posted
 	// ACT
@@ -188,6 +189,7 @@ func TestPostGreetings(t *testing.T) {
 		t.Error("Failed to marshal")
 	}
 	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -244,12 +246,14 @@ func TestPostGreetingsBadRequest(t *testing.T) {
 	testGreetings := make(map[string]string)
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// assert the greeting is posted
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("POST", "/greeting", strings.NewReader(`{"thisPayload": "hasTheWrongData"}`))
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -271,7 +275,8 @@ func TestPostGreetingsEmptyGreeting(t *testing.T) {
 	testGreetings := make(map[string]string)
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -282,6 +287,7 @@ func TestPostGreetingsEmptyGreeting(t *testing.T) {
 		t.Error("Failed to marshal")
 	}
 	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -306,7 +312,7 @@ func TestGetGreeting(t *testing.T) {
 	testGreetings[expectedId] = expectedMessage
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -335,7 +341,7 @@ func TestGetGreetingNotFound(t *testing.T) {
 	testGreetings["12345678-9012-3456-7890-123456789012"] = "Hello World"
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -357,7 +363,7 @@ func TestGetGreetingNotFoundNotUUID(t *testing.T) {
 	testGreetings["12345678-9012-3456-7890-123456789012"] = "Hello World"
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -386,7 +392,8 @@ func TestPutGreeting(t *testing.T) {
 	}
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	// make an original get requst before the put request
@@ -412,6 +419,7 @@ func TestPutGreeting(t *testing.T) {
 	// ACT
 	// make the PUT request to modify the message stored for the specific ID
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -464,11 +472,13 @@ func TestPutGreetingNotFound(t *testing.T) {
 	}
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -491,11 +501,13 @@ func TestPutGreetingNotFoundNotUUID(t *testing.T) {
 	}
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -513,11 +525,13 @@ func TestPutGreetingMalformedRequest(t *testing.T) {
 	testGreetings[id] = "Original Message"
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), strings.NewReader(`{"someRubbish": "dataHere"}`))
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -541,11 +555,13 @@ func TestPutGreetingMalformedRequestAndNotFound(t *testing.T) {
 	incorrectId := "87654321-8765-4321-8765-432187654321"
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", incorrectId), strings.NewReader(`{"someRubbish": "dataHere"}`))
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -570,7 +586,8 @@ func TestDeleteGreeting(t *testing.T) {
 	testGreetings[id] = message
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	// make an original get requst before the delete request
@@ -596,6 +613,7 @@ func TestDeleteGreeting(t *testing.T) {
 	// ACT
 	// make the DELETE request to remove the greeting for the specific ID
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -629,11 +647,13 @@ func TestDeleteGreetingNotFound(t *testing.T) {
 	incorrectId := "87654321-8765-4321-8765-432187654321"
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", incorrectId), nil)
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -650,11 +670,13 @@ func TestDeleteGreetingNotUUID(t *testing.T) {
 	id := "somethingThatDoesntExist"
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
 
 	// ACT
 	responce := httptest.NewRecorder()
 	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
+	request.Header.Add("X-Auth", key)
 	if err != nil {
 		t.Error("Failed to create request")
 	}
@@ -676,7 +698,7 @@ func TestGetRandomGreeting(t *testing.T) {
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeRandomNumberService.StoreFakeRandomNumber(2)
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	// make a get/random requst while fakeRandomNumberService is set to 2
@@ -726,7 +748,7 @@ func TestGetRandomGreetingNoGreetings(t *testing.T) {
 	testGreetings := make(map[string]string)
 	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
 	fakeUUIDService := uuid.FakeUUIDService{}
-	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService)
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, "")
 
 	// ACT
 	responce := httptest.NewRecorder()
@@ -745,4 +767,263 @@ func TestGetRandomGreetingNoGreetings(t *testing.T) {
 
 	assert.Equal(t, http.StatusServiceUnavailable, responce.Code)
 	assert.Equal(t, "no greetings in system", getResponse.Error)
+}
+
+func TestAuthenticationMiddlewarePostGreeting(t *testing.T) {
+	// ARRANGE
+	var fakeUUID = "12345678-9012-3456-7890-123456789012"
+	testGreetings := make(map[string]string)
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	fakeUUIDService.StoreFakeUUID(fakeUUID)
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
+
+	// ACT
+	// assert 401 status is returned when unauthourised (empty string)
+	responce := httptest.NewRecorder()
+	var postBody PostRequest
+	postBody.Message = "Hello World"
+	jsonBody, err := json.Marshal(postBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+	request, err := http.NewRequest("POST", "/greeting", bytes.NewReader(jsonBody))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	request.Header.Add("X-Auth", "")
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// now assert the greeting was not POSTed to the Greetings
+	// ACT
+	getResponce := httptest.NewRecorder()
+	getRequest, err := http.NewRequest("GET", "/greetings", nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(getResponce, getRequest)
+
+	// ASSERT
+	assert.Equal(t, http.StatusOK, getResponce.Code)
+	assert.Equal(t, 0, len(testGreetings))
+
+	// ACT
+	// assert 401 status is returned when unauthourised (incorrect string)
+	responce = httptest.NewRecorder()
+	request.Header.Set("X-Auth", "incorrectSecretCode456")
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// again assert the greeting was not POSTed to the Greetings
+	// ACT
+	getResponce = httptest.NewRecorder()
+	router.ServeHTTP(getResponce, getRequest)
+
+	// ASSERT
+	assert.Equal(t, http.StatusOK, getResponce.Code)
+	assert.Equal(t, 0, len(testGreetings))
+
+	// ACT
+	// assert the greeting is posted when authourised
+	responce = httptest.NewRecorder()
+	request.Header.Set("X-Auth", key)
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	var postResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &postResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusCreated, responce.Code)
+	assert.Equal(t, fakeUUID, postResponse.Id)
+	assert.Equal(t, postBody.Message, postResponse.Message)
+}
+
+func TestAuthenticationMiddlewarePutGreeting(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "12345678-9012-3456-7890-123456789012"
+	originalMessage := "Original Message"
+	testGreetings[id] = originalMessage
+	var putBody PutRequest
+	putBody.Message = "New Message Here"
+	jsonBody, err := json.Marshal(putBody)
+	if err != nil {
+		t.Error("Failed to marshal")
+	}
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
+
+	// ACT
+	// assert the greeting message is not modified when unauthourised (empty string)
+	request, err := http.NewRequest("PUT", fmt.Sprintf("/greeting/%s", id), bytes.NewReader(jsonBody))
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	request.Header.Add("X-Auth", "")
+	responce := httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// make get requst to ensure the unsuccessful PUT request did not modify the original message
+	responce = httptest.NewRecorder()
+	getRequest, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, getRequest)
+
+	// ASSERT
+	// ensure the original message was not modified
+	var getResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponse.Id)
+	assert.Equal(t, originalMessage, getResponse.Message)
+
+	// ACT
+	// assert the greeting message is not modified when unauthourised (incorrect string)
+	request.Header.Set("X-Auth", "incorrectSecretCode456")
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// make get requst to ensure the unsuccessful PUT request did not modify the original message
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, getRequest)
+
+	// ASSERT
+	// ensure the original message was not modified
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponse.Id)
+	assert.Equal(t, originalMessage, getResponse.Message)
+
+	// ACT
+	// assert the greeting message is modified when authourised
+	request.Header.Set("X-Auth", key)
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	// ensure the PUT request response code is 200 and the response body Id and Message are correct
+	var putResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &putResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, putResponse.Id)
+	assert.Equal(t, putBody.Message, putResponse.Message)
+}
+
+func TestAuthenticationMiddlewareDeleteGreeting(t *testing.T) {
+	// ARRANGE
+	testGreetings := make(map[string]string)
+	id := "12345678-9012-3456-7890-123456789012"
+	message := "Hello World!"
+	testGreetings[id] = message
+	fakeRandomNumberService := randomnumber.FakeRandomNumberService{}
+	fakeUUIDService := uuid.FakeUUIDService{}
+	key := "mySecretCodeABC123"
+	router := getRouter(testGreetings, &fakeUUIDService, &fakeRandomNumberService, key)
+
+	// ACT
+	// assert the greeting is not deleted when unauthourised (empty string)
+	request, err := http.NewRequest("DELETE", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	request.Header.Add("X-Auth", "")
+	responce := httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// make get requst to ensure the unsuccessful delete request did not delete the greeting
+	responce = httptest.NewRecorder()
+	getRequest, err := http.NewRequest("GET", fmt.Sprintf("/greeting/%s", id), nil)
+	if err != nil {
+		t.Error("Failed to create request")
+	}
+	router.ServeHTTP(responce, getRequest)
+
+	// ASSERT
+	var getResponse Greeting
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponse.Id)
+	assert.Equal(t, message, getResponse.Message)
+
+	// ACT
+	// assert the greeting is not deleted when unauthourised (incorrect string)
+	request.Header.Set("X-Auth", "incorrectSecretCode456")
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	assert.Equal(t, http.StatusUnauthorized, responce.Code)
+	assert.Empty(t, responce.Body.String())
+
+	// ACT
+	// make get requst to ensure the unsuccessful delete request did not delete the greeting
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, getRequest)
+
+	// ASSERT
+	err = json.Unmarshal(responce.Body.Bytes(), &getResponse)
+	if err != nil {
+		t.Error("Failed to unmarshal")
+	}
+
+	assert.Equal(t, http.StatusOK, responce.Code)
+	assert.Equal(t, id, getResponse.Id)
+	assert.Equal(t, message, getResponse.Message)
+
+	// ACT
+	// assert the greeting is deleted when authourised
+	request.Header.Set("X-Auth", key)
+	responce = httptest.NewRecorder()
+	router.ServeHTTP(responce, request)
+
+	// ASSERT
+	// ensure the DELETE request response code is 204 and the responce body is empty
+	assert.Equal(t, http.StatusNoContent, responce.Code)
+	assert.Empty(t, responce.Body.String())
 }
