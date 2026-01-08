@@ -29,6 +29,13 @@
 2. Clone this repo using command `git clone https://github.com/EliR94/GoBackendProject.git`
 4. Run `go run .` to run the API locally, and use a tool such as Postman use the locally hosted API (using header `X-Auth` : `mySecretCodeABC123` for POST/PUT/DELETE requests)
 
+## To run this API in Docker
+1. First you will require: `go v1.24.0` and `docker verwsion v3.9` with these versions as minimum requirement
+2. Clone this repo using command `git clone https://github.com/EliR94/GoBackendProject.git`
+3. You will require the Docker Desktop App `https://www.docker.com/products/docker-desktop/`
+4. Run `docker-compose up --build -d` to build the Greetings API container and Game container in Docker.
+5. You will need to use an App like Postman to make POST requests to populate the Greetings. You will see in the Game container logs the random Greetings and in the Greetings logs the logs from the Greeting API when requests are made and completed.
+
 ## API Documentation:
 * GET /healthcheck
     * Request:
