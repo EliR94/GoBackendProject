@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  greetings:
+    container_name: greetings
+    build:
+      context: .
+      dockerfile: greeting.Dockerfile
+    ports:
+      - 3000:3000
+  game:
+    container_name: game
+    build:
+      context: .
+      dockerfile: game.Dockerfile
+    depends_on:
+      - greetings
