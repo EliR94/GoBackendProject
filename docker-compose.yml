@@ -8,10 +8,17 @@ services:
       dockerfile: greeting.Dockerfile
     ports:
       - 3000:3000
+  defaultgreetings:
+    container_name: defaultgreetings
+    build:
+      context: .
+      dockerfile: defaultgreetings.Dockerfile
+    depends_on:
+      - greetings
   game:
     container_name: game
     build:
       context: .
       dockerfile: game.Dockerfile
     depends_on:
-      - greetings
+      - defaultgreetings
